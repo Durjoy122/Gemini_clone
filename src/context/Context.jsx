@@ -11,16 +11,31 @@ const ContextProvider = ({ children }) => {
   const [loading, setLoading] = useState(false); // display loading animation
   const [resultData, setResultData] = useState(""); // display our result in page
 
-  const delayPara = (index , next) => {
-      
+  const delayPara = (index , nextWord) => {
+      setTimeout(() => {
+          setResultData((prev) => prev + nextWord);
+      }, index * 75);
+  }
+
+  const newChat = () => {
+      setLoading(false);
+      setShowResult(false);
   }
 
   const onSent = async (prompt) => {
       setResultData(""); // clear previous result
       setLoading(true);
       setShowResult(true);
-      setRecentPrompt(input); // set recent prompt to display
-      const response = await runChat(input);
+      let response;
+      if(prompt !== undefined) {
+          response = await runChat(prompt);
+          setRecentPrompt(prompt); 
+      }
+      else {
+         setRecentPrompt(input); // set recent prompt to display
+         setPrevPrompts((prev) => [...prev, input]); // add input to history
+         response = await runChat(input);
+      }
       let responseArray = response.split("**");
       let newResponse = "";
       for(let i = 0; i < responseArray.length; i++){
@@ -32,7 +47,10 @@ const ContextProvider = ({ children }) => {
          }
       }
       let newResponse2 = newResponse.split("*").join("<br>");
-      setResultData(newResponse2);
+      let newResponseArray = newResponse2.split(" ");
+      for(let i = 0; i < newResponseArray.length; i++) {
+          delayPara(i, newResponseArray[i] + " ");
+      }
       setLoading(false);
       setInput(""); // clear input field after sending
   };
@@ -47,7 +65,8 @@ const ContextProvider = ({ children }) => {
       loading,
       resultData,
       input,
-      setInput
+      setInput,
+      newChat
   };
 
   return (
